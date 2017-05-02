@@ -1,6 +1,6 @@
 {
   "name": "dependency-analyzer",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Compare versions of dependencies in bower.json and package.json files",
   "main": "deps.js",
   "scripts": {
