@@ -6,6 +6,6 @@ Just run
 ` npm install ` and then 
 ` node deps.js `
 
-Then open index.html in your browser to see a list of dependencies. Click on things to see other things.
+Then open `localhost:3000` in your browser to see a list of dependencies. Click on things to see other things.
 
 Supports bower.json and package.json
