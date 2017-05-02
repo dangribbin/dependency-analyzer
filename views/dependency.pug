@@ -1,0 +1,19 @@
+extends index
+
+block content
+  .content
+    p 
+      b #{dependency} is used in #{repos.length} projects
+
+    table
+      thead
+        th="Project"
+        th="Version"
+        th="Source Type"
+      tbody
+        each repo in repos
+          tr
+            td
+              a(href='/repos/' + repo.projectName + '/')= repo.projectName
+            td=repo.version
+            td=repo.sourceType

@@ -1,0 +1,40 @@
+body {
+  font-family: sans-serif;
+  margin: 20px;
+}
+
+.wrapper {
+  display: flex;
+}
+
+.sidebar {
+  background: #EEE;
+}
+
+  ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 20px 15px;
+  }
+
+  li {
+    padding: 5px 0;
+  }
+
+.content {
+  margin-left: 20px;
+}
+
+.sidebar, .content {
+
+}
+
+td {
+  padding: 5px 25px 5px 0px;
+  text-align: left;
+}
+
+th {
+  padding: 15px 25px 15px 0;
+  text-align: left
+}

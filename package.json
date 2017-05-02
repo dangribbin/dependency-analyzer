@@ -1,0 +1,17 @@
+{
+  "name": "fe-deps",
+  "version": "1.0.0",
+  "description": "Read and analyze bower files",
+  "main": "deps.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Dan Gribbin",
+  "license": "ISC",
+  "dependencies": {
+    "compare-versions": "^3.0.1",
+    "express": "^4.15.2",
+    "lodash": "^4.17.4",
+    "pug": "^2.0.0-beta11"
+  }
+}

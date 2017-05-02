@@ -1,0 +1,5 @@
+.sidebar
+  ul
+    each project in projects
+      li
+        a(href='/repos/' + project.project + '/')= project.project

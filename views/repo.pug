@@ -1,0 +1,21 @@
+extends index
+
+block content
+  .content
+    p 
+      b #{repo.project} has #{repo.dependencies.length} dependencies
+
+    table
+      thead
+        th="Dependency"
+        th="Version"
+        //- th="Most Recent Version"
+        th="Source Type"
+      each dep in repo.dependencies
+        tr
+          td
+            a(href='/dependency/' + dep.name + '/')= dep.name
+          td=dep.version
+          td=dep.sourceType
+          //- if mostRecentVersions[dep.name]
+          //- td=mostRecentVersions[dep.name]
