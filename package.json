@@ -9,8 +9,13 @@
   "author": "Dan Gribbin",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.16.2",
+    "cors": "^2.8.3",
     "express": "^4.15.2",
     "lodash": "^4.17.4",
     "pug": "^2.0.0-beta11"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
   }
 }

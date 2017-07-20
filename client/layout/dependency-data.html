@@ -1,0 +1,19 @@
+<div class="content">
+  <p><b>{{dependency}} is used in {{repos.length}} projects</b>
+    <table>
+      <thead>
+        <th>Project</th>
+        <th>Version</th>
+        <th>Source Type</th>
+      </thead>
+      <tbody>
+        <div> each repo in repos
+          <tr>
+            <td><a :href="'/repos/' + repo.projectName + '/'">{{repo.projectName}}</a></td>
+            <td>{{repo.version}}</td>
+            <td>{{repo.sourceType}}</td>
+          </tr>
+        </div>
+      </tbody>
+    </table></b>
+</div>
