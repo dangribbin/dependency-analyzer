@@ -1,6 +1,10 @@
 <template>
   <div class="sidebar">
-    <a v-for="project in projects" :href="'/repos/' + project.projectName + '/'">{{project.projectName}}</a>
+    <ul>
+      <li v-for="project in projects">
+        <a :href="'/repos/' + project.name + '/'">{{project.name}}</a>
+      </li>
+    </ul>
   </div>
 </template>
 

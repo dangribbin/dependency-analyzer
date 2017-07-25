@@ -7,13 +7,11 @@ let fsGetDependenciesForProject = (projectName) => {
   let file = null;
   let allDependenciesForProject = {};
 
-  _.each(supportedFileTypes, fileType => {
+  _.each(supportedFileTypes, (fileType) => {
     try {
       file = require(path.join(__dirname, '../' + projectName, fileType.fileName));
     }
     catch (e){}
-
-    }
   });
 
   return allDependenciesForProject;

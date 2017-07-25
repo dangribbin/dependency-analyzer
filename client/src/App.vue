@@ -14,16 +14,15 @@ export default {
   components: {Sidebar},
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App',
-      projects: [{projectName: 'Dan'}]
+      projects: []
     }
   },
   created() {
-    axios.get(`http://localhost:3000/projects`)
+    axios.get(`http://localhost:3000/projects/`)
     .then(response => {
-      // JSON responses are automatically parsed.
+      this.projects = response.data.values;
+    }).catch(function (err) {
       debugger
-      this.projects = response.data
     });
   }
 }

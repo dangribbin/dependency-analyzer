@@ -13,3 +13,9 @@ const supportedFileTypes = [
 
 let ignore = [];
 // let ignore = ['dev', 'hailstone-web-client', 'moderation', 'shift-components'];
+
+
+module.exports = {
+  supportedFileTypes,
+  ignore
+}
