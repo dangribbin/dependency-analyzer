@@ -1,30 +1,39 @@
 <template>
   <div id="app">
-    <Sidebar v-bind:projects="projects"></Sidebar>
+    <router-view></router-view>
   </div>
 </template>
 
 <script>
 // import './normalize.css'
-import Sidebar from './Sidebar.vue'
+import Projects from './Projects.vue';
+import Repositories from './Repositories.vue';
 import axios from 'axios';
+import Home from './Home.vue';
+// import Projects from './Projects';
+// import api from './api/index.js'
 
 export default {
   name: 'app',
-  components: {Sidebar},
-  data () {
-    return {
-      projects: []
-    }
-  },
-  created() {
-    axios.get(`http://localhost:3000/projects/`)
-    .then(response => {
-      this.projects = response.data.values;
-    }).catch(function (err) {
-      debugger
-    });
-  }
+  components: {Projects, Repositories},
+  // data () {
+  //   return {
+  //     projects: [],
+  //     repositories: [],
+  //     commits: []
+  //   }
+  // },
+  // created() {
+  //   axios.get(`http://localhost:3000/projects/`)
+  //   .then(response => {
+  //     this.projects = response.data.values;
+  //     axios.get(`http://localhost:3000/repositories/`).then(reposResponse => {
+  //       this.repositories = reposResponse.data.values
+  //     })
+  //   }).catch(function (err) {
+  //     debugger
+  //   });
+  // }
 }
 </script>
 
