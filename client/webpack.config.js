@@ -1,5 +1,8 @@
 var path = require('path')
 var webpack = require('webpack')
+var ExtractTextPlugin = require('extract-text-webpack-plugin');
+var jeet = require('jeet');
+var nib = require('nib');
 
 module.exports = {
   entry: './src/main.js',
@@ -19,7 +22,21 @@ module.exports = {
           // other vue-loader options go here
         }
       },
-      // { loader: 'css-loader' },
+      {
+        test: /\.styl$/,
+        loader: ExtractTextPlugin.extract({
+          fallback: {loader: 'style-loader'},
+          use: [
+            'css-loader',
+            {
+              loader: 'stylus-loader',
+              options: {
+                use: [jeet(), nib()]
+              }
+            }
+          ]
+        })
+      },
       {
         test: /\.js$/,
         loader: 'babel-loader',

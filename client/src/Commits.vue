@@ -1,8 +1,14 @@
 <template>
   <div class="sidebar">
+    <line-chart :data="chartData" ytitle="Commits"></line-chart>
+
+    <div class="stat">
+      <h1>{{daysSinceLastCommit}}</h1>
+      <span></span>
+    </div>
     <ul>
-      <li v-for="commit in commits">
-        <span>{{commit.authorTimestamp}} - {{commit.author.name}}</span>
+      <li v-for="(commit, index) in commits">
+        <span>{{index +1}}. {{moment(commit.authorTimestamp).format('MMM DD YYYY')}} - {{commit.author.name}} - {{commit.message}}</span>
       </li>
     </ul>
   </div>
@@ -11,31 +17,55 @@
 <script>
 
 import axios from 'axios';
+import _ from 'lodash';
+import moment from 'moment';
 
 export default {
   name: 'Commits',
-  mounted: () => {
-    let url = `http://localhost:3000/projects/` + this.$route.query.projectID + '/repositories/'  + this.$route.query.repositoryID + '/commits';
-    axios.get(url).then(function(data) {
-        this.commits = data;
-    });
-  }
-}
+  data () {
+    return {
+      loading: false,
+      commits: null,
+      error: null,
+      chartData: null,
+      daysSinceLastCommit: null
+    }
+  },
+  // components: {
+  //   'calendar-heatmap': calendarHeatmap
+  // },
+  created () {
+    // fetch the data when the view is created and the data is
+    // already being observed
+    this.fetchData()
+  },
+  watch: {
+    // call again the method if the route changes
+    '$route': 'fetchData'
+  },
+  methods: {
+    fetchData () {
+      this.error = this.post = null
+      this.loading = true;
+      let url = 'http://localhost:3000/projects/' + this.$route.params.projectKey + '/repositories/' + this.$route.params.repositorySlug + '/commits';
+      axios.get(url).then(response => {
+        this.commits = response.data.values;
+        this.chartData = _.map(response.data.values, function (commit) {
+          return [ moment(commit.authorTimestamp).format('YYYY-MM'), moment(commit.authorTimestamp).format('DD')]
+        });
+        this.loading = false;
+      }).catch(function (err) {
+        this.loading = false;
+        this.error = err.toString();
+      });
+    }
 
+  },
+}
 </script>
 
-<style>
-.sidebar {
+<style lang="stylus">
+// .stat
+//   color blue
 
-}
-
-ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 20px 15px;
-}
-
-li {
-  padding: 5px 0;
-}
 </style>

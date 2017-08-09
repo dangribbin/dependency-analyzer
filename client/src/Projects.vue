@@ -2,18 +2,28 @@
   <div v-if="error" class="error">
     {{ error }}
   </div>
-  <div v-else-if="!error" class="projects">
-    <ul>
-      <li v-for="project in projects">
-        <router-link :to=" 'projects/' + project.key + '/repositories'">{{project.name}}</router-link>
-      </li>
-    </ul>
+  <div v-else-if="!error && !loading" class="projects-page">
+    <div class="left">
+      <h2>Projects</h2>
+      <ul>
+        <li v-for="project in projects">
+          <router-link :to=" '/projects/' + project.key + '/repositories'">{{project.name}}</router-link>
+        </li>
+      </ul>
+    </div>
+    <div class="right">
+      <div class="stat">
+        <h1>{{projects.length}}</h1>
+        <span>Projects in this Stash account</span>
+      </div>
+    </div>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
 import Vue from 'vue';
+
 export default {
   name: 'Projects',
   data () {
@@ -26,7 +36,12 @@ export default {
   created () {
     // fetch the data when the view is created and the data is
     // already being observed
-    this.fetchData()
+    if (!this.$root.projects) {
+      this.fetchData()
+    }
+    else {
+      this.projects = this.$root.projects;
+    }
   },
   watch: {
     // call again the method if the route changes
@@ -39,6 +54,7 @@ export default {
 
       axios.get(`http://localhost:3000/projects/`).then(response => {
         this.projects = response.data.values;
+        this.$root.projects = response.data.values;
         this.loading = false;
       }).catch(function (err) {
         this.loading = false;
@@ -49,18 +65,28 @@ export default {
 }
 </script>
 
-<style>
-.projects {
+<style lang="stylus">
 
-}
+.projects-page
+  margin 20px
+  display flex
+  flex-direction row
 
-ul {
+  .right
+    align-items center
+
+  .stat
+    text-align center
+    h1
+      font-size 55px
+      margin-bottom 0
+
+ul
   list-style-type: none;
   margin: 0;
-  padding: 20px 15px;
-}
+  padding: 0 15px;
 
-li {
+li
   padding: 5px 0;
-}
+
 </style>

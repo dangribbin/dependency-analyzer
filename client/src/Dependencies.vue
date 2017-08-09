@@ -1,8 +1,8 @@
 <template>
   <div class="sidebar">
     <ul>
-      <li v-for="dependency in dependencies">
-        <span>{{dependency.name}}</span>
+      <li v-for="(file, index) in dependencies">
+        <span>{{index +1}}</span>
       </li>
     </ul>
   </div>
@@ -14,14 +14,37 @@ import axios from 'axios';
 
 export default {
   name: 'Dependencies',
-  mounted: () => {
-    let url = `http://localhost:3000/projects/` + this.$route.query.projectID + '/repositories/'  + this.$route.query.repositoryID + '/dependencies';
-    axios.get(url).then(function(data) {
-        this.commits = data;
-    });
-  }
+  data () {
+    return {
+      loading: false,
+      dependencies: null,
+      error: null
+    }
+  },
+  created () {
+    // fetch the data when the view is created and the data is
+    // already being observed
+    this.fetchData()
+  },
+  watch: {
+    // call again the method if the route changes
+    '$route': 'fetchData'
+  },
+  methods: {
+    fetchData () {
+      this.error = this.post = null
+      this.loading = true;
+      let url = 'http://localhost:3000/projects/' + this.$route.params.projectKey + '/repositories/' + this.$route.params.repositorySlug + '/dependencies';
+      axios.get(url).then(response => {
+        this.dependencies = response.data.values;
+        this.loading = false;
+      }).catch(function (err) {
+        this.loading = false;
+        this.error = err.toString();
+      });
+    }
+  },
 }
-
 </script>
 
 <style>
