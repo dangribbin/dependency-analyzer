@@ -22,4 +22,4 @@ new Vue({
   render: h => h(App)
 });
 
-router.push('/projects');
+// router.push('/projects');

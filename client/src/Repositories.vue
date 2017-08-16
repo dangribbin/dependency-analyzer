@@ -1,7 +1,7 @@
 <template>
   <div class="repositories-page">
     <header>
-      <button type="button" name="button" @click="$router.go(-1)"><i class="fa fa-caret-left"></i> Back</button>
+      <button type="button" @click="$router.go(-1)"><i class="fa fa-caret-left"></i> Back</button>
       <h2>Repositories in {{$route.params.projectKey}}</h2>
       <div class="filters">
         <!-- Recent, neutral, old, unknown -->
@@ -14,6 +14,9 @@
         <label for="neutral-checkbox">No Recent Activity</label>
         <input type="checkbox" id="unknown-checkbox" value="true" v-model="filter.unknown">
         <label for="unknown-checkbox">Unknown</label>
+      </div>
+      <div class="tools">
+        <button type="button" class="tool-button">Compare all dependencies</button>
       </div>
     </header>
     <h4 v-if="loading">Loading...</h4>
@@ -34,16 +37,19 @@
           </tr>
         </table>
       </div>
-      <div class="right">
-        <div class="stat">
+      <div class="right stats">
+        <div class="stat clickable" @click="filterByOnly('all')">
           <h1>{{repositories.length}}</h1>
           <span>Repositories in this project</span>
         </div>
         <div class="stat clickable outdated-stat" @click="filterByOnly('old')">
-          <h1>{{getReposOfType('old').length}}</h1>
-          <span>Possibly unmaintained repositories</span>
+          <pie-chart :data="repositoriesByStatus" :donut="false" :legend="false" width="140px" height="140px"></pie-chart>
+          <div class="sub-stat with-graph">
+            <h2>{{getReposOfType('old').length}}</h2>
+            <span>Possibly unmaintained repositories</span>
+          </div>
         </div>
-        <div class="stat">
+        <div class="stat clickable">
           <h2><router-link class="repo-link" :to=" '/projects/' + $route.params.projectKey + '/repositories/' + oldestRepo.slug">{{oldestRepo.name}}</router-link></h2>
           <span>Oldest repository</span>
         </div>
@@ -60,7 +66,8 @@
   let repoStatusMap = {
     'old': moment().subtract(1, 'year'),
     'neutral': moment().subtract(6, 'months'),
-    'recent': moment().isBetween(moment(), moment().subtract(6, 'months'))
+    'recent': moment().isBetween(moment(), moment().subtract(6, 'months')),
+    'unknown': null
   };
 
   export default {
@@ -74,7 +81,8 @@
         sortProp: 'name',
         lastSortProp: 'name',
         sortDirection: 'asc',
-        oldestRepo: null
+        oldestRepo: null,
+        repositoriesByStatus: null
       }
     },
     created () {
@@ -84,7 +92,7 @@
       }
       else {
         this.repositories = this.$root.repos[this.$route.params.projectKey];
-        this.oldestRepo = _(this.repositories).filter('lastCommit').sortBy('lastCommit.authorTimestamp').head();
+        this.createChartData(this.repositories);
       }
     },
     watch: {
@@ -122,13 +130,26 @@
         let url = 'http://localhost:3000/projects/' + self.$route.params.projectKey + '/repositories?stats=true';
         axios.get(url).then(response => {
           self.repositories = response.data;
-          self.oldestRepo = _(self.repositories).filter('lastCommit').sortBy('lastCommit.authorTimestamp').head();
+          self.createChartData(response.data);
           self.$root.repos[self.$route.params.projectKey] = response.data;
           self.loading = false;
         }).catch(function (err) {
           self.loading = false;
           self.error = err.toString();
         });
+      },
+      createChartData (repos) {
+        this.oldestRepo = _(repos).filter('lastCommit').sortBy('lastCommit.authorTimestamp').head();
+        this.repositoriesByStatus = this.getRepositoriesByStatus(repos);
+      },
+      getRepositoriesByStatus (repos) {
+        let self = this;
+        let reposByStatus = {};
+        _.each(repos, (repo) => {
+          let key = self.getRepoStatus(repo).className;
+          reposByStatus[key] =  reposByStatus[key] ? (reposByStatus[key] + 1) : 1;
+        });
+        return reposByStatus;
       },
       sortBy (prop) {
         if (prop !== this.lastSortProp) {
@@ -148,8 +169,9 @@
       },
       filterByOnly (type) {
         let self = this;
+        let defaultValue = type === 'all' ? true : false;
         _.each(_.keys(self.filter), (filterKey) => {
-          self.filter[filterKey] = false;
+          self.filter[filterKey] = defaultValue;
         });
         self.filter[type] = true;
       },

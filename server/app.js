@@ -7,26 +7,14 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const axios = require('axios');
+const bower = require('bower');
 
-function reflect(promise){
+function reflect (promise){
     return promise.then(function(v){ return {v:v, status: "resolved"} }, function(e){ return {e: e, status: "rejected"} } );
 }
 
-function reflectResolveAll(promise){
-    return promise.then(function(v){ return {v:v, status: "resolved"} }, function(e){ return {e: e, v: {}, status: "resolved"} } );
-}
-
-
-// axios.all(arr.map(reflect)).then(function(results){
-//     var success = results.filter(x => x.status === "resolved");
-// });
-
-// const utils = require('./helpers/utils');
-// const local = require('./helpers/local');
-// const config = require('./config');
-// const routes = require('./routes');
-
 axios.defaults.baseURL = process.env.URL;
+
 axios.defaults.auth = {
   username: process.env.USERNAME,
   password: process.env.PASSWORD
@@ -36,11 +24,6 @@ axios.defaults.params = {
 };
 
 app.use(cors());
-
-
-// const projects = require('express').Router();
-// const axios = require('axios');
-// const _ = require('lodash');
 
 function logError (error) {
   if (error.response) {
@@ -62,7 +45,6 @@ app.get('/projects', function (req, res) {
     res.status(200).json(response.data);
   }).catch(logError);
 });
-
 
 app.get('/projects/:projectKey/repositories', function (req, res) {
 
@@ -147,30 +129,89 @@ app.post('/projects/:projectKey/repositories/:repositorySlug/stats', function (r
   }).catch(logError);
 });
 
-app.get('/:projectKey/repositories/:repositorySlug/dependencies', function (req, res) {
+app.get('/projects/:projectKey/repositories/:repositorySlug/dependencies', function (req, res) {
   let url = '/projects/' + req.params.projectKey + '/repos/' + req.params.repositorySlug + '/files';
   axios.get(url).then(function (response) {
+
+    let filePromises = [];
+
     let fileNames = _.filter(response.data.values, (filename) => {
       return filename.indexOf('package.json') >= 0 || filename.indexOf('bower.json') >= 0;
-    })
-    let filePromises = [];
+    });
+
     _.each(fileNames, (filename) => {
       let filePathUrl = '/projects/' + req.params.projectKey + '/repos/' + req.params.repositorySlug + '/browse/' + filename;
-      let promise = axios.get(filePathUrl, {raw: true});
-      console.log(promise)
+      let promise = axios.get(filePathUrl);
       filePromises.push(promise)
     });
+
     axios.all(filePromises).then((fileresponses)=> {
+
       let files = _.map(fileresponses, 'data');
-      res.status(200).json(files);
+      let dependencyObjects = [];
+      let packageInfoPromises = [];
+
+      _.each(files, (file, index) => {
+        let depsPromises = [];
+        let allPackageManagerFileDependencyKeys = [];
+        let text = '';
+
+        // files come back in { lines: [...]} format from stash - convert to JSON
+        _.each(file.lines, (item) => { text += item.text });
+        let depFile = JSON.parse(text);
+        depFile.fileName = fileNames[index]; // decorate for client
+
+        let packageManagers = [
+          {
+            base: 'https://registry.npjs.org/';,
+            name: 'npm',
+            propsToInspect: ['dependencies', 'devDependencies'],
+            currentVersions: []
+          },
+          {
+            base: 'https://libraries.io/api/bower/',
+            name: 'bower',
+            propsToInspect: ['dependencies', 'devDependencies'],
+            currentVersions: []
+          }
+        ];
+
+        // get the most current versions of deps used in repo
+        _.each(packageManagers, packageManager => {
+
+          let dependenciesToRequestCurrentVersionsOf = _.map(packageManager.propsToInspect, prop => {
+            return {
+              dependencyNames: _.keys(depFile[prop]),
+              packageManagerName: packageManager
+            };
+          });
+
+          allPackageManagerFileDependencyKeys.push(dependenciesToRequestCurrentVersionsOf);
+        });
+
+        _.each(allPackageManagerFileDependencyKeys, key => {
+          return axios.get(packageManager.base + key);
+        });
+
+        dependencyObjects.push(depFile);
+      });
+
+      axios.all(packageInfoPromises.map(reflect)).then( packageInfoResponses => {
+        packageInfoResponses = _.map(packageInfoResponses, 'v.data');
+        let currentVersions = {};
+        // make an easily-referenced object for the client
+        _.each(packageInfoResponses, packageInfo => {
+          currentVersions[packageInfo.name] = packageInfo['dist-tags'] ? packageInfo['dist-tags'].latest : (packageInfo.latest_release_number ? packageInfo.latest_release_number : '');
+        });
+        res.status(200).json({ dependencyObjects, currentVersions});
+      });
+
     }).catch(function (err) {
       res.status(400).json(err);
     });
   }).catch(logError);
 });
 
-
-// app.use('/', routes);
 
 app.listen(3000, function() {
   console.log('listening on 3000');

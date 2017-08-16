@@ -10,6 +10,8 @@
   "license": "ISC",
   "dependencies": {
     "axios": "^0.16.2",
+    "bower": "^1.8.0",
+    "compare-versions": "^3.0.1",
     "cors": "^2.8.3",
     "express": "^4.15.2",
     "lodash": "^4.17.4",
