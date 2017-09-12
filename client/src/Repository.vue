@@ -195,19 +195,13 @@ export default {
     }
   },
   created () {
-    if (!this.$root.commits[this.$route.params.repositorySlug]) {
+    if (!this.$root.commits[this.$route.params.repositorySlug] || !this.$root.dependencyFiles[this.$route.params.repositorySlug]) {
       this.fetchData();
     }
     else {
       this.commits = this.$root.commits[this.$route.params.repositorySlug];
-      this.createChartData(this.commits);
-    }
-    if (!this.$root.dependencyFiles[this.$route.params.repositorySlug]) {
-      this.fetchData();
-    }
-    else {
       this.dependencyFiles = this.$root.dependencyFiles[this.$route.params.repositorySlug];
-      this.createChartData(this.dependencyFiles);
+      this.createChartData(this.commits);
     }
   },
   watch: {

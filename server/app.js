@@ -131,29 +131,50 @@ app.post('/projects/:projectKey/repositories/:repositorySlug/stats', function (r
 
 app.get('/projects/:projectKey/repositories/:repositorySlug/dependencies', function (req, res) {
   let url = '/projects/' + req.params.projectKey + '/repos/' + req.params.repositorySlug + '/files';
-  axios.get(url).then(function (response) {
+  axios.get(url).then(function (allFilesInRepo) {
 
+    allFilesInRepo = allFilesInRepo.data.values;
     let filePromises = [];
+    let packageManagers = [
+      {
+        base: 'https://registry.npjs.org/',
+        name: 'npm',
+        fileName: 'package.json',
+        propsToInspect: ['dependencies', 'devDependencies'],
+        currentPackageVersions: []
+      },
+      {
+        base: 'https://libraries.io/api/bower/',
+        name: 'bower',
+        fileName: 'bower.json',
+        propsToInspect: ['dependencies', 'devDependencies'],
+        currentPackageVersions: []
+      }
+    ];
 
-    let fileNames = _.filter(response.data.values, (filename) => {
-      return filename.indexOf('package.json') >= 0 || filename.indexOf('bower.json') >= 0;
+    // filter files to only present package manager files from array of all file names
+    let fileNames = _.filter(allFilesInRepo, (filename) => {
+      return _.find(packageManagers, ['fileName', filename]);
     });
 
+    // set up promises for file contents
     _.each(fileNames, (filename) => {
       let filePathUrl = '/projects/' + req.params.projectKey + '/repos/' + req.params.repositorySlug + '/browse/' + filename;
       let promise = axios.get(filePathUrl);
       filePromises.push(promise)
     });
 
+    // call promises for file contents
     axios.all(filePromises).then((fileresponses)=> {
-
       let files = _.map(fileresponses, 'data');
-      let dependencyObjects = [];
+      let consumedDependencyObjects = [];
       let packageInfoPromises = [];
+      let allPackageManagerFileDependencies = [];
+      let allDependenciesToFetch = [];
 
+      // files is an array of the contents of {package/bower}.json
       _.each(files, (file, index) => {
         let depsPromises = [];
-        let allPackageManagerFileDependencyKeys = [];
         let text = '';
 
         // files come back in { lines: [...]} format from stash - convert to JSON
@@ -161,49 +182,35 @@ app.get('/projects/:projectKey/repositories/:repositorySlug/dependencies', funct
         let depFile = JSON.parse(text);
         depFile.fileName = fileNames[index]; // decorate for client
 
-        let packageManagers = [
-          {
-            base: 'https://registry.npjs.org/';,
-            name: 'npm',
-            propsToInspect: ['dependencies', 'devDependencies'],
-            currentVersions: []
-          },
-          {
-            base: 'https://libraries.io/api/bower/',
-            name: 'bower',
-            propsToInspect: ['dependencies', 'devDependencies'],
-            currentVersions: []
-          }
-        ];
-
-        // get the most current versions of deps used in repo
+        // set up objects to request most recent package versions
         _.each(packageManagers, packageManager => {
-
-          let dependenciesToRequestCurrentVersionsOf = _.map(packageManager.propsToInspect, prop => {
+          // pull out devDependencies, etc into a flat array of objects
+          let packagesToRequestCurrentVersionsOf = _.map(packageManager.propsToInspect, prop => {
             return {
-              dependencyNames: _.keys(depFile[prop]),
-              packageManagerName: packageManager
+              packageNames: _.keys(depFile[prop]),
+              packageManager: packageManager
             };
           });
 
-          allPackageManagerFileDependencyKeys.push(dependenciesToRequestCurrentVersionsOf);
+          allPackageManagerFileDependencies.push(packagesToRequestCurrentVersionsOf);
+        });
+        console.log(allPackageManagerFileDependencies[0])
+        allPackageManagerFileDependencies = _.uniqBy(allPackageManagerFileDependencies, 'name');
+        _.each(allPackageManagerFileDependencies, dependency => {
+          packageInfoPromises.push(axios.get(dependency.packageManager.base + dependency));
         });
 
-        _.each(allPackageManagerFileDependencyKeys, key => {
-          return axios.get(packageManager.base + key);
-        });
-
-        dependencyObjects.push(depFile);
+        consumedDependencyObjects.push(depFile);
       });
 
       axios.all(packageInfoPromises.map(reflect)).then( packageInfoResponses => {
         packageInfoResponses = _.map(packageInfoResponses, 'v.data');
-        let currentVersions = {};
+        let currentPackageVersions = {};
         // make an easily-referenced object for the client
         _.each(packageInfoResponses, packageInfo => {
-          currentVersions[packageInfo.name] = packageInfo['dist-tags'] ? packageInfo['dist-tags'].latest : (packageInfo.latest_release_number ? packageInfo.latest_release_number : '');
+          currentPackageVersions[packageInfo.name] = packageInfo['dist-tags'] ? packageInfo['dist-tags'].latest : (packageInfo.latest_release_number ? packageInfo.latest_release_number : '');
         });
-        res.status(200).json({ dependencyObjects, currentVersions});
+        res.status(200).json({ consumedDependencyObjects, currentPackageVersions });
       });
 
     }).catch(function (err) {
