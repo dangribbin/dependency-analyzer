@@ -194,7 +194,7 @@ app.get('/projects/:projectKey/repositories/:repositorySlug/dependencies', funct
 
           allPackageManagerFileDependencies.push(packagesToRequestCurrentVersionsOf);
         });
-        console.log(allPackageManagerFileDependencies[0])
+
         allPackageManagerFileDependencies = _.uniqBy(allPackageManagerFileDependencies, 'name');
         _.each(allPackageManagerFileDependencies, dependency => {
           packageInfoPromises.push(axios.get(dependency.packageManager.base + dependency));
