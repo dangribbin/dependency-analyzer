@@ -34,7 +34,7 @@ export default {
     fetchData () {
       this.error = this.post = null
       this.loading = true;
-      let url = 'http://localhost:3000/projects/' + this.$route.params.projectKey + '/repositories/' + this.$route.params.repositorySlug + '/dependencies';
+      let url = 'http://localhost:3005/projects/' + this.$route.params.projectKey + '/repositories/' + this.$route.params.repositorySlug + '/dependencies';
       axios.get(url).then(response => {
         this.dependencies = response.data.values;
         this.loading = false;

@@ -47,7 +47,7 @@ export default {
     fetchData () {
       this.error = this.post = null
       this.loading = true;
-      let url = 'http://localhost:3000/projects/' + this.$route.params.projectKey + '/repositories/' + this.$route.params.repositorySlug + '/commits';
+      let url = 'http://localhost:3005/projects/' + this.$route.params.projectKey + '/repositories/' + this.$route.params.repositorySlug + '/commits';
       axios.get(url).then(response => {
         this.commits = response.data.values;
         this.chartData = _.map(response.data.values, function (commit) {

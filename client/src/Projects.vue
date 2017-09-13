@@ -54,7 +54,7 @@ export default {
     fetchData () {
       this.error = this.post = null
       this.loading = true
-      axios.get(`http://localhost:3000/projects/`).then(response => {
+      axios.get(`http://localhost:3005/projects/`).then(response => {
         this.projects = response.data.values;
         this.$root.projects = response.data.values;
         this.loading = false;

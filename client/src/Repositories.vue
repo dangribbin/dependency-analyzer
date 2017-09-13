@@ -127,7 +127,7 @@
         let self = this;
         self.error = self.post = null
         self.loading = true;
-        let url = 'http://localhost:3000/projects/' + self.$route.params.projectKey + '/repositories?stats=true';
+        let url = 'http://localhost:3005/projects/' + self.$route.params.projectKey + '/repositories?stats=true';
         axios.get(url).then(response => {
           self.repositories = response.data;
           self.createChartData(response.data);

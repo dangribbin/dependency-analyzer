@@ -218,8 +218,8 @@ export default {
     fetchData () {
       let self = this;
       self.loading = true;
-      let commitsUrl = 'http://localhost:3000/projects/' + self.$route.params.projectKey + '/repositories/' + self.$route.params.repositorySlug + '/commits';
-      let dependenciesUrl = 'http://localhost:3000/projects/' + self.$route.params.projectKey + '/repositories/' + self.$route.params.repositorySlug + '/dependencies';
+      let commitsUrl = 'http://localhost:3005/projects/' + self.$route.params.projectKey + '/repositories/' + self.$route.params.repositorySlug + '/commits';
+      let dependenciesUrl = 'http://localhost:3005/projects/' + self.$route.params.projectKey + '/repositories/' + self.$route.params.repositorySlug + '/dependencies';
       axios.get(commitsUrl).then(response => {
         self.commits = response.data;
         self.$root.commits[self.$route.params.repositorySlug] = response.data;
